@@ -28,6 +28,7 @@ begin
         p "@#{toot.status.account.acct}: #{content}" if debug
         if toot.status.visibility == "direct" then
           content.gsub!(Regexp.new("@#{account}", Regexp::IGNORECASE), "")
+          content += "\n📨 #{toot.status.account.acct}"
 
           p "画像あり" if !(toot.status.media_attachments == [])
           imgs = []
