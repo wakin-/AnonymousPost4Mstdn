@@ -37,7 +37,7 @@ begin
           o_imgt = []
           toot.status.media_attachments.each {|ml|
             imgs << ml.id
-            o_imgt << ml.text_url
+            o_imgt << ml.attributes["text_url"]
             open(ml.id, "wb") {|mid|
               open(ml.url) {|mu|
                 mid.write(mu.read)
@@ -50,7 +50,7 @@ begin
           imgs.each {|u|
             media = rest.upload_media(u)
             uml << media.id
-            n_imgt << media.text_url
+            n_imgt << media.attributes["text_url"]
             p "uploaded: #{u}"
           }
           if !(toot.status.media_attachments == []) then
