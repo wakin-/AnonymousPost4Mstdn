@@ -24,9 +24,11 @@ begin
         content.gsub!(/<br\s?\/?>/, "\n")
         content.gsub!("</p><p>", "\n\n")
         content = Sanitize.clean(content).strip
+
         p "@#{toot.status.account.acct}: #{content}" if debug
         if toot.status.visibility == "direct" then
           content.gsub!(Regexp.new("@#{account}", Regexp::IGNORECASE), "")
+
           p "画像あり" if !(toot.status.media_attachments == [])
           imgs = []
           toot.status.media_attachments.each {|ml|
@@ -43,11 +45,13 @@ begin
             uml << rest.upload_media(u).id
             p "uploaded: #{u}"
           }
+
           content = 0x200B.chr("UTF-8") if content.empty? && !(uml.empty?)
           p "spoiler text: #{toot.status.attributes["spoiler_text"]}" if debug
           p "content: #{content}" if debug
           p "media: #{uml}" if debug
           p "sensitive?: #{toot.status.attributes["sensitive"]}" if debug
+
           rest.create_status(content, sensitive: toot.status.attributes["sensitive"], spoiler_text: toot.status.attributes["spoiler_text"], media_ids: uml)
         end
       end
