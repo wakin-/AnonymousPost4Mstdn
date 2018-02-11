@@ -28,6 +28,7 @@ begin
         p "@#{toot.status.account.acct}: #{content}" if debug
         content.gsub!(Regexp.new("@#{account}", Regexp::IGNORECASE), "")
         content += "\n📩 #{toot.status.account.acct}" +(!(toot.status.account.acct.match(/@/)) ? "@#{config['base_url']}" : '')
+        content += " ##{config['hashtag']}" if config['hashtag']
 
         p "画像あり" if !(toot.status.media_attachments == [])
         imgs = []
