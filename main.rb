@@ -52,7 +52,7 @@ begin
         p "media: #{uml}" if debug
         p "sensitive?: #{toot.status.attributes["sensitive"]}" if debug
 
-#        rest.create_status(content, sensitive: toot.status.attributes["sensitive"], spoiler_text: toot.status.attributes["spoiler_text"], media_ids: uml)
+        rest.create_status(content, sensitive: toot.status.attributes["sensitive"], spoiler_text: toot.status.attributes["spoiler_text"], media_ids: uml)
       end
     end
   end
