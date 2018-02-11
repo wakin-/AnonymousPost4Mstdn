@@ -5,8 +5,12 @@
 1. 以下を参考に`key.yml`という設定ファイルを作成し、どうにかして`base_url`と`access_token`を入手して記載する。`account`には名前を入れてください。
 ```key.yml
 base_url: theboss.tech
-access_token: tx8j4j3yb5ibxuns6i3w73ndpffmg4c7jxcr7jr5psgn5de4a38k5d5jjc4tsir8
-account: AnonymousPost
+access_token: ******
+account: echo
+```
+オプションでhashtagを記載することでトゥートにハッシュタグを付加することも可能。
+```
+hashtag: fediverse_station
 ```
 3. `bundle install`
 4. `bundle exec ruby main.rb`
