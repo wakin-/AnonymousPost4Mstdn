@@ -12,6 +12,6 @@ account: echo
 ```
 hashtag: fediverse_station
 ```
-3. `bundle install`
-4. `bundle exec ruby main.rb`
-5.  ✌('ω'✌ )三✌('ω')✌三( ✌'ω')✌
+2. `bundle install`
+3. `bundle exec ruby main.rb`
+4.  ✌('ω'✌ )三✌('ω')✌三( ✌'ω')✌
