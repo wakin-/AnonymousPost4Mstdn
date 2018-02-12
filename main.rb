@@ -31,7 +31,7 @@ def proc_icon_set_request(content, toot, icon_config, rest, debug)
     YAML.dump(icon_config, File.open('./icon.yml', 'w'))
 
     response = "@#{toot.status.account.acct} your icon is \"#{icon}\""
-    p "in_reply_to: "+toot.status.attributes["id"]
+    p "in_reply_to: "+toot.status.attributes["id"] if debug
     rest.create_status(response, sensitive: toot.status.attributes["sensitive"], spoiler_text: toot.status.attributes["spoiler_text"], in_reply_to_id: toot.status.attributes["id"], visibility: toot.status.attributes["visibility"])
 
     return true
@@ -61,7 +61,7 @@ begin
           id = toot.status.account.id
           content = icon_config[id] + " " + content if icon_config[id] && !icon_config[id].empty?
 
-          p "画像あり" if !(toot.status.media_attachments == [])
+          p "画像あり" if !(toot.status.media_attachments == []) && debug
           imgs = []
           o_imgt = []
           toot.status.media_attachments.each {|ml|
@@ -70,7 +70,7 @@ begin
             open(ml.id, "wb") {|mid|
               open(ml.url) {|mu|
                 mid.write(mu.read)
-                p "saved: #{ml.id}"
+                p "saved: #{ml.id}" if debug
               }
             }
           }
@@ -80,9 +80,9 @@ begin
             media = rest.upload_media(u)
             uml << media.id
             n_imgt << media.attributes["text_url"]
-            p "uploaded: #{u}"
+            p "uploaded: #{u}" if debug
             File.delete(u)
-            p "delete: #{u}"
+            p "delete: #{u}" if debug
           }
           if !(toot.status.media_attachments == []) && !(o_imgt.include?(nil)) then
             imgt = [o_imgt, n_imgt].transpose
