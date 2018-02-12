@@ -81,6 +81,8 @@ begin
             uml << media.id
             n_imgt << media.attributes["text_url"]
             p "uploaded: #{u}"
+            File.delete(u)
+            p "delete: #{u}"
           }
           if !(toot.status.media_attachments == []) && !(o_imgt.include?(nil)) then
             imgt = [o_imgt, n_imgt].transpose
