@@ -7,6 +7,8 @@ require 'open-uri'
 config = YAML.load_file("./key.yml")
 debug = false
 
+icon_config = File.exist?("./icon.yml") ? open('./icon.yml', 'r') { |f| YAML.load(f) } : {}
+
 stream = Mastodon::Streaming::Client.new(
   base_url: "https://" + config["base_url"],
   bearer_token: config["access_token"])
@@ -16,6 +18,27 @@ rest = Mastodon::REST::Client.new(
   bearer_token: config["access_token"])
 
 account = rest.verify_credentials().acct
+
+def proc_icon_set_request(content, toot, icon_config, rest, debug)
+  icon_set_pattern = /icon=\[([^\]]+)\]/
+
+  match = content.match(icon_set_pattern)
+  if match
+    icon = match[1]
+    id = toot.status.account.id
+    p "#{id}: #{icon}" if debug
+    icon_config[id] = icon
+    YAML.dump(icon_config, File.open('./icon.yml', 'w'))
+
+    response = "@#{toot.status.account.acct} your icon is \"#{icon}\""
+    p "in_reply_to: "+toot.status.attributes["id"]
+    rest.create_status(response, sensitive: toot.status.attributes["sensitive"], spoiler_text: toot.status.attributes["spoiler_text"], in_reply_to_id: toot.status.attributes["id"], visibility: toot.status.attributes["visibility"])
+
+    return true
+  end
+
+  return false
+end
 
 begin
   stream.user() do |toot|
@@ -29,8 +52,14 @@ begin
         p "@#{toot.status.account.acct}: #{content}" if debug
 #        if toot.status.visibility == "direct" then
           content.gsub!(Regexp.new("@#{account}", Regexp::IGNORECASE), "")
+
+          next if proc_icon_set_request(content, toot, icon_config, rest, debug)
+
           content += "\n📩 #{toot.status.account.acct}" +(!(toot.status.account.acct.match(/@/)) ? "@#{config['base_url']}" : '')
           content += " ##{config['hashtag']}" if config['hashtag']
+
+          id = toot.status.account.id
+          content = icon_config[id] + " " + content if icon_config[id] && !icon_config[id].empty?
 
           p "画像あり" if !(toot.status.media_attachments == [])
           imgs = []
