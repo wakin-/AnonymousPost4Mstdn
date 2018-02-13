@@ -3,6 +3,7 @@ require 'yaml'
 require 'mastodon'
 require 'sanitize'
 require 'open-uri'
+require 'cgi'
 
 config = YAML.load_file("./key.yml")
 debug = false
@@ -48,6 +49,7 @@ begin
         content.gsub!(/<br\s?\/?>/, "\n")
         content.gsub!("</p><p>", "\n\n")
         content = Sanitize.clean(content).strip
+        content = CGI.unescapeHTML(content)
 
         p "@#{toot.status.account.acct}: #{content}" if debug
 #        if toot.status.visibility == "direct" then
