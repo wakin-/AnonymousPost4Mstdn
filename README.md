@@ -3,12 +3,12 @@
 
 ## 使い方
 1. 以下を参考に`key.yml`という設定ファイルを作成し、どうにかして`base_url`と`access_token`を入手して記載する。
-```key.yml
+```yml
 base_url: theboss.tech
 access_token: ******
 ```
-オプションでhashtagを記載することでトゥートにハッシュタグを付加することも可能。
-```
+オプションで`hashtag`を記載することでトゥートにハッシュタグを付加することも可能。
+```yml
 hashtag: fediverse_station
 ```
 2. `bundle install`
