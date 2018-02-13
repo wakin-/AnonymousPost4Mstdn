@@ -78,7 +78,7 @@ begin
           proc_icon_set_request(content, toot, icon_config, rest, debug)
           proc_toot_boost_request(content, toot, rest, debug)
 
-          next if content.empty? || content.match(/^\s$/)
+          next if content.empty? || content.match(/^\s+$/)
 
           content += "\n📩 #{toot.status.account.acct}" +(!(toot.status.account.acct.match(/@/)) ? "@#{config['base_url']}" : '')
           content += " ##{config['hashtag']}" if config['hashtag']
