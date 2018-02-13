@@ -7,10 +7,15 @@
 base_url: theboss.tech
 access_token: ******
 ```
+オプションで`post_message`を記載することで発言者を表示する部分を編集できる。`[acct]`が投稿者の`id@domain`に置き換えれられる。
+```yml
+post_message: "\n [acct] posted"
+```
 オプションで`hashtag`を記載することでトゥートにハッシュタグを付加することも可能。
 ```yml
 hashtag: fediverse_station
 ```
+
 2. `bundle install`
 3. `bundle exec ruby main.rb`
 4.  ✌('ω'✌ )三✌('ω')✌三( ✌'ω')✌
