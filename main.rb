@@ -66,7 +66,7 @@ def add_post_content(content, toot, icon_config, config)
   content = icon_config[id] + " " + content if icon_config[id] && !icon_config[id].empty?
 
   acct = toot.status.account.acct + (!(toot.status.account.acct.match(/@/)) ? "@#{config['base_url']}" : '')
-  post_message = config["post_message"] ? config["post_message"] : ""
+  post_message = !config["post_message"].nil? ? config["post_message"] : "\n📩 [acct]"
   post_message.gsub!(/\[acct\]/, acct)
   content += post_message
   content += " ##{config['hashtag']}" if config['hashtag']
