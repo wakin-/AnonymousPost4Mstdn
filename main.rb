@@ -39,6 +39,28 @@ def proc_icon_set_request(content, toot, icon_config, rest, debug)
   content.gsub!(icon_set_pattern, "")
 end
 
+def proc_toot_boost_request(content, toot, rest, debug)
+  toot_url_pattern = /https:\/\/[\S]+/
+
+  scan = content.scan(toot_url_pattern)
+  p scan if debug
+  if scan
+    scan.each {|match|
+      response = rest.search(match)
+
+      if response.statuses.size > 0
+        response.statuses.each {|status|
+          p status.attributes["id"] if debug
+
+          rest.reblog(status.attributes["id"])
+        }
+
+        content.gsub!(Regexp.new("\s*#{match}\s*"), "")
+      end
+    }
+  end
+end
+
 begin
   stream.user() do |toot|
     if toot.kind_of?(Mastodon::Notification) then
@@ -54,6 +76,7 @@ begin
           content.gsub!(Regexp.new("@#{account} ", Regexp::IGNORECASE), "")
 
           proc_icon_set_request(content, toot, icon_config, rest, debug)
+          proc_toot_boost_request(content, toot, rest, debug)
 
           next if content.empty? || content.match(/^\s$/)
 
