@@ -34,11 +34,9 @@ def proc_icon_set_request(content, toot, icon_config, rest, debug)
     response = "@#{toot.status.account.acct} your icon is \"#{icon}\""
     p "in_reply_to: "+toot.status.attributes["id"] if debug
     rest.create_status(response, sensitive: toot.status.attributes["sensitive"], spoiler_text: toot.status.attributes["spoiler_text"], in_reply_to_id: toot.status.attributes["id"], visibility: toot.status.attributes["visibility"])
-
-    return true
   end
 
-  return false
+  content.gsub!(icon_set_pattern, "")
 end
 
 begin
@@ -55,7 +53,9 @@ begin
 #        if toot.status.visibility == "direct" then
           content.gsub!(Regexp.new("@#{account} ", Regexp::IGNORECASE), "")
 
-          next if proc_icon_set_request(content, toot, icon_config, rest, debug)
+          proc_icon_set_request(content, toot, icon_config, rest, debug)
+
+          next if content.empty? || content.match(/^\s$/)
 
           content += "\n📩 #{toot.status.account.acct}" +(!(toot.status.account.acct.match(/@/)) ? "@#{config['base_url']}" : '')
           content += " ##{config['hashtag']}" if config['hashtag']
