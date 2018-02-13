@@ -73,7 +73,7 @@ begin
 
         p "@#{toot.status.account.acct}: #{content}" if debug
 #        if toot.status.visibility == "direct" then
-          content.gsub!(Regexp.new("@#{account} ", Regexp::IGNORECASE), "")
+          content.gsub!(Regexp.new("\s*@#{account}\s*", Regexp::IGNORECASE), "")
 
           proc_icon_set_request(content, toot, icon_config, rest, debug)
           proc_toot_boost_request(content, toot, rest, debug)
