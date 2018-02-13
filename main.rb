@@ -61,6 +61,18 @@ def proc_toot_boost_request(content, toot, rest, debug)
   end
 end
 
+def add_post_content(content, toot, icon_config, config)
+  id = toot.status.account.id
+  content = icon_config[id] + " " + content if icon_config[id] && !icon_config[id].empty?
+
+  acct = toot.status.account.acct + (!(toot.status.account.acct.match(/@/)) ? "@#{config['base_url']}" : '')
+  post_message = config["post_message"] ? config["post_message"] : ""
+  post_message.gsub!(/\[acct\]/, acct)
+  content += post_message
+  content += " ##{config['hashtag']}" if config['hashtag']
+  return content
+end
+
 begin
   stream.user() do |toot|
     if toot.kind_of?(Mastodon::Notification) then
@@ -80,11 +92,7 @@ begin
 
           next if content.empty? || content.match(/^\s+$/)
 
-          content += "\n📩 #{toot.status.account.acct}" +(!(toot.status.account.acct.match(/@/)) ? "@#{config['base_url']}" : '')
-          content += " ##{config['hashtag']}" if config['hashtag']
-
-          id = toot.status.account.id
-          content = icon_config[id] + " " + content if icon_config[id] && !icon_config[id].empty?
+          content = add_post_content(content, toot, icon_config, config)
 
           p "画像あり" if !(toot.status.media_attachments == []) && debug
           imgs = []
