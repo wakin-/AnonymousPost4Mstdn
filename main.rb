@@ -115,7 +115,7 @@ begin
             n_imgt << media.attributes["text_url"]
             p "uploaded: #{u}" if debug
             File.delete(u)
-            p "delete: #{u}" if debug
+            p "deleted: #{u}" if debug
           }
           if !(toot.status.media_attachments == []) && !(o_imgt.include?(nil)) then
             imgt = [o_imgt, n_imgt].transpose
