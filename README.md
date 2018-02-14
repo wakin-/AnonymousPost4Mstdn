@@ -15,6 +15,10 @@ post_message: "\n [acct] posted"
 ```yml
 hashtag: fediverse_station
 ```
+オプションで`keep_id_day`を記載すると、記載した日数だけ情報がキープされ、投稿元の削除の反映、ファボ・ブーストを投稿者に通知する機能が有効化される。
+```yml
+keep_id_day: 7
+```
 
 2. `bundle install`
 3. `bundle exec ruby main.rb`
