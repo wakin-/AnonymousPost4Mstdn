@@ -97,8 +97,12 @@ def add_mention_response_id(mention_response, mention_id, response_id, created_a
   })
 end
 
+def check_keep_id_day_config(config)
+  return config["keep_id_day"] && config["keep_id_day"].kind_of?(Integer) && config["keep_id_day"] >= 0
+end
+
 def check_mention_response(mention_response, config, debug)
-  if config["keep_id_day"]
+  if check_keep_id_day_config(config)
     mention_response.each {|id, mr|
       if mr['created_at'].in_time_zone('Tokyo') < Time.current.ago(config["keep_id_day"].days)
         mention_response.delete(id)
@@ -167,7 +171,7 @@ begin
 
           mention_response = open_mention_response()
 
-          add_mention_response_id(mention_response, toot.status.attributes["id"], response.attributes["id"], toot.status.attributes["created_at"])
+          add_mention_response_id(mention_response, toot.status.attributes["id"], response.attributes["id"], toot.status.attributes["created_at"]) if check_keep_id_day_config(config)
 
           check_mention_response(mention_response, config, debug)
 
