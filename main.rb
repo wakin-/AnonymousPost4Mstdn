@@ -4,11 +4,26 @@ require 'mastodon'
 require 'sanitize'
 require 'open-uri'
 require 'cgi'
+require 'time'
+require 'active_support/time'
 
 config = YAML.load_file("./key.yml")
 debug = false
 
+post_message = !config["post_message"].nil? ? config["post_message"] : "\n📩 [acct]"
+
 icon_config = File.exist?("./icon.yml") ? open('./icon.yml', 'r') { |f| YAML.load(f) } : {}
+
+def open_mention_response()
+  mention_response = File.exist?("./mention_response.yml") ? open('./mention_response.yml', 'r') { |f| YAML.load(f) } : {'mention_response' => {}}
+  return mention_response && mention_response['mention_response'] ? mention_response['mention_response'] : {}
+end
+
+def save_mention_response(mention_response)
+  file = File.open("./mention_response.yml", 'w')
+  YAML.dump({'mention_response' => mention_response}, file)
+  file.close
+end
 
 stream = Mastodon::Streaming::Client.new(
   base_url: "https://" + config["base_url"],
@@ -61,16 +76,41 @@ def proc_toot_boost_request(content, toot, rest, debug)
   end
 end
 
-def add_post_content(content, toot, icon_config, config)
+def disp_acct(acct, config)
+  return acct + (!(acct.match(/@/)) ? "@#{config['base_url']}" : '')  
+end
+
+def add_post_content(content, toot, icon_config, config, post_message)
   id = toot.status.account.id
   content = icon_config[id] + " " + content if icon_config[id] && !icon_config[id].empty?
 
-  acct = toot.status.account.acct + (!(toot.status.account.acct.match(/@/)) ? "@#{config['base_url']}" : '')
-  post_message = !config["post_message"].nil? ? config["post_message"] : "\n📩 [acct]"
-  post_message.gsub!(/\[acct\]/, acct)
-  content += post_message
+  p toot.status.account.acct
+
+  acct = disp_acct(toot.status.account.acct, config)
+  p acct
+#  acct = toot.status.account.acct + (!(toot.status.account.acct.match(/@/)) ? "@#{config['base_url']}" : '')
+  p post_message
+  content += post_message.gsub(/\[acct\]/, acct)
   content += " ##{config['hashtag']}" if config['hashtag']
   return content
+end
+
+def add_mention_response_id(mention_response, mention_id, response_id, created_at)
+  mention_response.store(mention_id, {
+    "response_id" => response_id,
+    "created_at" => created_at
+  })
+end
+
+def check_mention_response(mention_response, config, debug)
+  if config["keep_id_day"]
+    mention_response.each {|id, mr|
+      if mr['created_at'].in_time_zone('Tokyo') < Time.current.ago(config["keep_id_day"].days)
+        mention_response.delete(id)
+        p "#{id} deleted" if debug
+      end
+    }
+  end
 end
 
 begin
@@ -92,7 +132,7 @@ begin
 
           next if content.empty? || content.match(/^\s+$/)
 
-          content = add_post_content(content, toot, icon_config, config)
+          content = add_post_content(content, toot, icon_config, config, post_message)
 
           p "画像あり" if !(toot.status.media_attachments == []) && debug
           imgs = []
@@ -128,8 +168,51 @@ begin
           p "media: #{uml}" if debug
           p "sensitive?: #{toot.status.attributes["sensitive"]}" if debug
 
-          rest.create_status(content, sensitive: toot.status.attributes["sensitive"], spoiler_text: toot.status.attributes["spoiler_text"], media_ids: uml)
+          response = rest.create_status(content, sensitive: toot.status.attributes["sensitive"], spoiler_text: toot.status.attributes["spoiler_text"], media_ids: uml)
+
+          mention_response = open_mention_response()
+
+          add_mention_response_id(mention_response, toot.status.attributes["id"], response.attributes["id"], toot.status.attributes["created_at"])
+
+          check_mention_response(mention_response, config, debug)
+
+          save_mention_response(mention_response)
 #        end
+      elsif toot.type == "favourite" then
+        mention_response = open_mention_response()
+
+        mention_response.select {|id, mr| mr["response_id"] == toot.status.id }.each_key {|key|
+          mention = rest.status(key)
+
+          acct = disp_acct(toot.attributes["account"]["acct"], config)
+#          acct = toot.attributes["account"]["acct"] + (!(toot.attributes["account"]["acct"].match(/@/)) ? "@#{config['base_url']}" : '')
+
+          content = "@"+mention.attributes["account"]["acct"]+" "+acct+"さんがお気に入りにしました"
+          p content if debug
+          rest.create_status(content, visibility: "direct", in_reply_to_id: mention.attributes["id"])
+        }
+      elsif toot.type == "reblog" then
+        mention_response = open_mention_response()
+
+        mention_response.select {|id, mr| mr["response_id"] == toot.status.id }.each_key {|key|
+          mention = rest.status(key)
+
+          acct = disp_acct(toot.attributes["account"]["acct"], config)
+          content = "@"+mention.attributes["account"]["acct"]+" "+acct+"さんがブーストしました"
+          p content if debug
+          rest.create_status(content, visibility: "direct", in_reply_to_id: mention.attributes["id"])
+        }
+      end
+    elsif toot.kind_of?(Mastodon::Streaming::DeletedStatus) then
+      mention_response = open_mention_response()
+
+      response_id = mention_response && mention_response[toot.id.to_s] ? mention_response[toot.id.to_s]["response_id"] : false
+      if response_id
+        rest.destroy_status(response_id)
+
+        mention_response.delete(toot.id.to_s)
+
+        save_mention_response(mention_response)
       end
     end
   end
