@@ -84,12 +84,7 @@ def add_post_content(content, toot, icon_config, config, post_message)
   id = toot.status.account.id
   content = icon_config[id] + " " + content if icon_config[id] && !icon_config[id].empty?
 
-  p toot.status.account.acct
-
   acct = disp_acct(toot.status.account.acct, config)
-  p acct
-#  acct = toot.status.account.acct + (!(toot.status.account.acct.match(/@/)) ? "@#{config['base_url']}" : '')
-  p post_message
   content += post_message.gsub(/\[acct\]/, acct)
   content += " ##{config['hashtag']}" if config['hashtag']
   return content
@@ -185,7 +180,6 @@ begin
           mention = rest.status(key)
 
           acct = disp_acct(toot.attributes["account"]["acct"], config)
-#          acct = toot.attributes["account"]["acct"] + (!(toot.attributes["account"]["acct"].match(/@/)) ? "@#{config['base_url']}" : '')
 
           content = "@"+mention.attributes["account"]["acct"]+" "+acct+"さんがお気に入りにしました"
           p content if debug
