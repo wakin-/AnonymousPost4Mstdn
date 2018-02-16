@@ -54,7 +54,13 @@ def proc_icon_set_request(content, toot, icon_config, rest, debug)
   content.gsub!(icon_set_pattern, "")
 end
 
-def proc_toot_boost_request(content, toot, rest, debug)
+def disp_acct(acct, config)
+  return acct + (!(acct.match(/@/)) ? "@#{config['base_url']}" : '')  
+end
+
+def proc_toot_boost_request(content, toot, rest, debug, config)
+  acct = disp_acct(toot.attributes["account"]["acct"], config)
+
   toot_url_pattern = /https:\/\/[\S]+/
 
   scan = content.scan(toot_url_pattern)
@@ -64,6 +70,13 @@ def proc_toot_boost_request(content, toot, rest, debug)
       response = rest.search(match)
 
       if response.statuses.size > 0
+
+        if config["boost_allow_list"] && !config["boost_allow_list"].index(acct)
+          content = "@"+toot.attributes["account"]["acct"]+" すみません。URLブーストは許可されていません。"
+          rest.create_status(content, visibility: "direct", in_reply_to_id: toot.attributes["status"]["id"])
+          return
+        end
+
         response.statuses.each {|status|
           p status.attributes["id"] if debug
 
@@ -74,10 +87,6 @@ def proc_toot_boost_request(content, toot, rest, debug)
       end
     }
   end
-end
-
-def disp_acct(acct, config)
-  return acct + (!(acct.match(/@/)) ? "@#{config['base_url']}" : '')  
 end
 
 def add_post_content(content, toot, icon_config, config, post_message)
@@ -127,7 +136,7 @@ begin
           content.gsub!(Regexp.new("\s*@#{account}\s*", Regexp::IGNORECASE), "")
 
           proc_icon_set_request(content, toot, icon_config, rest, debug)
-          proc_toot_boost_request(content, toot, rest, debug)
+          proc_toot_boost_request(content, toot, rest, debug, config)
 
           next if content.empty? || content.match(/^\s+$/)
 
